@@ -228,8 +228,10 @@ class SudokuApp {
 
     if (num !== this.state.solution[row][col]) {
       this.state.mistakes++;
+      this._vibrate([50, 30, 50]);
     } else {
       this._removeNoteFromPeers(row, col, num);
+      this._vibrate(10);
     }
 
     if (this._checkVictory()) {
@@ -343,6 +345,10 @@ class SudokuApp {
     this.state.notesMode = !this.state.notesMode;
     this.dom.notesBtn.classList.toggle('active', this.state.notesMode);
     this.render();
+  }
+
+  _vibrate(pattern) {
+    if (navigator.vibrate) navigator.vibrate(pattern);
   }
 
   toggleOverlay() {
