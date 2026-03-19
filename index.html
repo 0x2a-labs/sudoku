@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Sudoku - Free Puzzle Game</title>
+  <meta name="description" content="Play Sudoku online with 4 difficulty levels. Features hints with solving techniques, statistics tracking, and works offline. Free, no ads.">
+  <meta name="keywords" content="sudoku, puzzle, brain game, logic, free sudoku">
+  <meta name="author" content="Sudoku App">
+  <meta name="theme-color" content="#378ADD">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Sudoku">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.svg">
+  <meta property="og:title" content="Sudoku - Free Puzzle Game">
+  <meta property="og:description" content="Play Sudoku online with hints, stats, and 4 difficulty levels.">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <select class="difficulty-select" aria-label="Difficulty">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+          <option value="advanced">Advanced</option>
+        </select>
+        <button class="new-game-btn" aria-label="New game">New</button>
+      </div>
+      <div class="header-right">
+        <span class="timer" aria-label="Timer">0:00</span>
+        <span class="mistakes" aria-label="Mistakes">0/3</span>
+        <button class="menu-btn" aria-label="Statistics menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Board -->
+    <div class="board" role="grid" aria-label="Sudoku board">
+      <div class="cell" data-row="0" data-col="0"></div><div class="cell" data-row="0" data-col="1"></div><div class="cell" data-row="0" data-col="2"></div><div class="cell" data-row="0" data-col="3"></div><div class="cell" data-row="0" data-col="4"></div><div class="cell" data-row="0" data-col="5"></div><div class="cell" data-row="0" data-col="6"></div><div class="cell" data-row="0" data-col="7"></div><div class="cell" data-row="0" data-col="8"></div>
+      <div class="cell" data-row="1" data-col="0"></div><div class="cell" data-row="1" data-col="1"></div><div class="cell" data-row="1" data-col="2"></div><div class="cell" data-row="1" data-col="3"></div><div class="cell" data-row="1" data-col="4"></div><div class="cell" data-row="1" data-col="5"></div><div class="cell" data-row="1" data-col="6"></div><div class="cell" data-row="1" data-col="7"></div><div class="cell" data-row="1" data-col="8"></div>
+      <div class="cell" data-row="2" data-col="0"></div><div class="cell" data-row="2" data-col="1"></div><div class="cell" data-row="2" data-col="2"></div><div class="cell" data-row="2" data-col="3"></div><div class="cell" data-row="2" data-col="4"></div><div class="cell" data-row="2" data-col="5"></div><div class="cell" data-row="2" data-col="6"></div><div class="cell" data-row="2" data-col="7"></div><div class="cell" data-row="2" data-col="8"></div>
+      <div class="cell" data-row="3" data-col="0"></div><div class="cell" data-row="3" data-col="1"></div><div class="cell" data-row="3" data-col="2"></div><div class="cell" data-row="3" data-col="3"></div><div class="cell" data-row="3" data-col="4"></div><div class="cell" data-row="3" data-col="5"></div><div class="cell" data-row="3" data-col="6"></div><div class="cell" data-row="3" data-col="7"></div><div class="cell" data-row="3" data-col="8"></div>
+      <div class="cell" data-row="4" data-col="0"></div><div class="cell" data-row="4" data-col="1"></div><div class="cell" data-row="4" data-col="2"></div><div class="cell" data-row="4" data-col="3"></div><div class="cell" data-row="4" data-col="4"></div><div class="cell" data-row="4" data-col="5"></div><div class="cell" data-row="4" data-col="6"></div><div class="cell" data-row="4" data-col="7"></div><div class="cell" data-row="4" data-col="8"></div>
+      <div class="cell" data-row="5" data-col="0"></div><div class="cell" data-row="5" data-col="1"></div><div class="cell" data-row="5" data-col="2"></div><div class="cell" data-row="5" data-col="3"></div><div class="cell" data-row="5" data-col="4"></div><div class="cell" data-row="5" data-col="5"></div><div class="cell" data-row="5" data-col="6"></div><div class="cell" data-row="5" data-col="7"></div><div class="cell" data-row="5" data-col="8"></div>
+      <div class="cell" data-row="6" data-col="0"></div><div class="cell" data-row="6" data-col="1"></div><div class="cell" data-row="6" data-col="2"></div><div class="cell" data-row="6" data-col="3"></div><div class="cell" data-row="6" data-col="4"></div><div class="cell" data-row="6" data-col="5"></div><div class="cell" data-row="6" data-col="6"></div><div class="cell" data-row="6" data-col="7"></div><div class="cell" data-row="6" data-col="8"></div>
+      <div class="cell" data-row="7" data-col="0"></div><div class="cell" data-row="7" data-col="1"></div><div class="cell" data-row="7" data-col="2"></div><div class="cell" data-row="7" data-col="3"></div><div class="cell" data-row="7" data-col="4"></div><div class="cell" data-row="7" data-col="5"></div><div class="cell" data-row="7" data-col="6"></div><div class="cell" data-row="7" data-col="7"></div><div class="cell" data-row="7" data-col="8"></div>
+      <div class="cell" data-row="8" data-col="0"></div><div class="cell" data-row="8" data-col="1"></div><div class="cell" data-row="8" data-col="2"></div><div class="cell" data-row="8" data-col="3"></div><div class="cell" data-row="8" data-col="4"></div><div class="cell" data-row="8" data-col="5"></div><div class="cell" data-row="8" data-col="6"></div><div class="cell" data-row="8" data-col="7"></div><div class="cell" data-row="8" data-col="8"></div>
+    </div>
+
+    <!-- Number Pad -->
+    <div class="numpad" role="group" aria-label="Number pad">
+      <button class="num-btn" data-num="1">1<span class="count">9</span></button>
+      <button class="num-btn" data-num="2">2<span class="count">9</span></button>
+      <button class="num-btn" data-num="3">3<span class="count">9</span></button>
+      <button class="num-btn" data-num="4">4<span class="count">9</span></button>
+      <button class="num-btn" data-num="5">5<span class="count">9</span></button>
+      <button class="num-btn" data-num="6">6<span class="count">9</span></button>
+      <button class="num-btn" data-num="7">7<span class="count">9</span></button>
+      <button class="num-btn" data-num="8">8<span class="count">9</span></button>
+      <button class="num-btn" data-num="9">9<span class="count">9</span></button>
+      <button class="num-btn" data-num="0" aria-label="Erase">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/>
+          <line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar" role="toolbar" aria-label="Game tools">
+      <button class="tool-btn hint-btn" aria-label="Get hint">
+        <span class="tool-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 015 11.9V16a1 1 0 01-1 1H8a1 1 0 01-1-1v-2.1A7 7 0 0112 2z"/></svg></span>
+        <span class="tool-label">Hint</span>
+      </button>
+      <button class="tool-btn undo-btn" aria-label="Undo">
+        <span class="tool-icon"><svg viewBox="0 0 24 24"><path d="M3 10h10a5 5 0 015 5v2M3 10l4-4M3 10l4 4"/></svg></span>
+        <span class="tool-label">Undo</span>
+      </button>
+      <button class="tool-btn notes-btn" aria-label="Toggle notes mode">
+        <span class="tool-icon"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+        <span class="tool-label">Notes</span>
+      </button>
+      <button class="tool-btn clear-btn" aria-label="Clear board">
+        <span class="tool-icon"><svg viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></span>
+        <span class="tool-label">Clear</span>
+      </button>
+    </div>
+
+    <!-- Hint Panel -->
+    <div class="hint-panel" style="display:none;">
+      <div class="hint-panel-inner">
+        <div class="hint-header">
+          <span class="hint-technique"></span>
+          <button class="hint-close" aria-label="Close hint">&times;</button>
+        </div>
+        <p class="hint-description"></p>
+        <button class="hint-apply">Apply hint</button>
+      </div>
+    </div>
+
+    <!-- Victory/Game Over Modal -->
+    <div class="modal-overlay victory-modal" style="display:none;">
+      <div class="modal">
+        <div class="victory-title">Puzzle Complete!</div>
+        <div class="victory-subtitle">Great job!</div>
+        <div class="victory-stats">
+          <div class="stat-card">
+            <div class="stat-value victory-time">0:00</div>
+            <div class="stat-label">Time</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value victory-difficulty">Medium</div>
+            <div class="stat-label">Difficulty</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value victory-mistakes">0</div>
+            <div class="stat-label">Mistakes</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value victory-hints">0</div>
+            <div class="stat-label">Hints</div>
+          </div>
+        </div>
+        <div class="victory-actions">
+          <button class="victory-btn-primary victory-new-game">New Game</button>
+          <button class="victory-btn-secondary victory-stats">View Stats</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm Clear Modal -->
+    <div class="modal-overlay confirm-modal" style="display:none;">
+      <div class="modal">
+        <div class="modal-title">Clear Board?</div>
+        <p style="text-align:center;color:var(--text-secondary);font-size:14px;margin-bottom:8px;">This will remove all your entries.</p>
+        <div class="modal-actions">
+          <button class="modal-btn-secondary confirm-no">Cancel</button>
+          <button class="modal-btn-primary confirm-yes">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Page -->
+    <div class="stats-page" style="display:none;">
+      <div class="stats-inner">
+        <div class="stats-header">
+          <button class="stats-back-btn" aria-label="Back">&larr;</button>
+          <span class="stats-title">Statistics</span>
+        </div>
+        <div class="stats-summary">
+          <div class="stats-metric">
+            <div class="metric-value stat-total-games">0</div>
+            <div class="metric-label">Games Played</div>
+          </div>
+          <div class="stats-metric">
+            <div class="metric-value stat-win-rate">—</div>
+            <div class="metric-label">Win Rate</div>
+          </div>
+          <div class="stats-metric">
+            <div class="metric-value stat-current-streak">0</div>
+            <div class="metric-label">Current Streak</div>
+          </div>
+          <div class="stats-metric">
+            <div class="metric-value stat-best-streak">0</div>
+            <div class="metric-label">Best Streak</div>
+          </div>
+        </div>
+        <div class="stats-section-title">Average Solve Time</div>
+        <div class="stats-chart-container">
+          <div class="chart-avg-time" style="position:relative;height:200px;"></div>
+        </div>
+        <div class="stats-section-title">Games by Difficulty</div>
+        <div class="stats-chart-container">
+          <div class="chart-distribution" style="position:relative;height:200px;"></div>
+        </div>
+        <div class="stats-section-title">Recent Solve Times</div>
+        <div class="stats-chart-container">
+          <div class="chart-trend" style="position:relative;height:200px;"></div>
+        </div>
+        <div class="stats-section-title">Recent Games</div>
+        <div class="stats-history"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+  <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
+</body>
+</html>

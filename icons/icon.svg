@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <style>
+      .cell-text { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; font-weight: 700; fill: #ffffff; }
+      .cell-text-dark { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; font-weight: 700; fill: #378ADD; }
+    </style>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect x="32" y="32" width="448" height="448" rx="48" ry="48" fill="#378ADD"/>
+
+  <!-- Inner grid background -->
+  <rect x="64" y="64" width="384" height="384" rx="16" ry="16" fill="#ffffff" opacity="0.15"/>
+
+  <!-- Grid lines - thin (inner cell dividers) -->
+  <line x1="192" y1="72" x2="192" y2="440" stroke="#ffffff" stroke-width="2" opacity="0.3"/>
+  <line x1="320" y1="72" x2="320" y2="440" stroke="#ffffff" stroke-width="2" opacity="0.3"/>
+  <line x1="72" y1="192" x2="440" y2="192" stroke="#ffffff" stroke-width="2" opacity="0.3"/>
+  <line x1="72" y1="320" x2="440" y2="320" stroke="#ffffff" stroke-width="2" opacity="0.3"/>
+
+  <!-- Filled cells (accent) -->
+  <rect x="68" y="68" width="120" height="120" rx="8" ry="8" fill="#ffffff" opacity="0.25"/>
+  <rect x="324" y="196" width="120" height="120" rx="8" ry="8" fill="#ffffff" opacity="0.25"/>
+  <rect x="196" y="324" width="120" height="120" rx="8" ry="8" fill="#ffffff" opacity="0.25"/>
+
+  <!-- Numbers in filled cells -->
+  <text x="128" y="148" text-anchor="middle" dominant-baseline="central" class="cell-text" font-size="72">5</text>
+  <text x="384" y="276" text-anchor="middle" dominant-baseline="central" class="cell-text" font-size="72">3</text>
+  <text x="256" y="404" text-anchor="middle" dominant-baseline="central" class="cell-text" font-size="72">7</text>
+
+  <!-- Numbers in empty cells (subtler) -->
+  <text x="256" y="148" text-anchor="middle" dominant-baseline="central" class="cell-text" font-size="72" opacity="0.5">9</text>
+  <text x="128" y="276" text-anchor="middle" dominant-baseline="central" class="cell-text" font-size="72" opacity="0.5">1</text>
+  <text x="384" y="404" text-anchor="middle" dominant-baseline="central" class="cell-text" font-size="72" opacity="0.5">4</text>
+</svg>
