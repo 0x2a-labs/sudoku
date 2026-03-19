@@ -32,11 +32,25 @@ class SudokuApp {
   init() {
     this._cacheDom();
     this._bindEvents();
+    this._setupViewportHeight();
     const saved = this.storage.loadGame();
     if (saved) {
       this._restoreGame(saved);
     } else {
       this.newGame(this.state.difficulty);
+    }
+  }
+
+  _setupViewportHeight() {
+    const setHeight = () => {
+      const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      document.documentElement.style.setProperty('--app-height', `${vh}px`);
+    };
+    setHeight();
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', setHeight);
+    } else {
+      window.addEventListener('resize', setHeight);
     }
   }
 

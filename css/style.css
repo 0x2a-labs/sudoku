@@ -79,6 +79,7 @@ button {
   border: none;
   background: none;
   color: inherit;
+  touch-action: manipulation;
 }
 
 select {
@@ -91,10 +92,13 @@ select {
 .app {
   display: flex;
   flex-direction: column;
+  height: 100vh;
   height: 100dvh;
+  height: calc(var(--app-height, 100dvh));
   max-width: 500px;
   margin: 0 auto;
   padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   overflow: hidden;
 }
 
@@ -240,6 +244,7 @@ select {
   cursor: pointer;
   transition: background 0.1s;
   line-height: 1;
+  touch-action: manipulation;
 }
 
 /* 3×3 box thick borders */
