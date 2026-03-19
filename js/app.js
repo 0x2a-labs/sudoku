@@ -557,111 +557,236 @@ class SudokuApp {
     if (this._charts) {
       this._charts.forEach(c => c.destroy());
     }
+    if (this._dailyChart) {
+      this._dailyChart.destroy();
+      this._dailyChart = null;
+    }
     this._charts = [];
 
     const page = this.dom.statsPage;
 
-    const barContainer = page.querySelector('.chart-avg-time');
-    const doughnutContainer = page.querySelector('.chart-distribution');
-    const lineContainer = page.querySelector('.chart-trend');
+    page.querySelector('.chart-analysis').innerHTML = '<canvas id="chartAnalysis"></canvas>';
+    page.querySelector('.chart-distribution').innerHTML = '<canvas id="chartDistribution"></canvas>';
 
-    barContainer.innerHTML = '<canvas id="chartAvgTime"></canvas>';
-    doughnutContainer.innerHTML = '<canvas id="chartDistribution"></canvas>';
-    lineContainer.innerHTML = '<canvas id="chartTrend"></canvas>';
-
-    const loadChart = () => {
+    const loadCharts = () => {
       const style = getComputedStyle(document.documentElement);
-      const textSec = style.getPropertyValue('--text-secondary').trim() || '#5F5E5A';
+      const textSec = style.getPropertyValue('--text-secondary').trim() || '#888';
       const borderDef = style.getPropertyValue('--border-thin').trim() || '#d0d0d0';
 
       const diffs = ['easy', 'medium', 'hard', 'advanced'];
-      const diffColors = ['#1D9E75', '#378ADD', '#BA7517', '#E24B4A'];
+      const diffLabels = ['Easy', 'Medium', 'Hard', 'Advanced'];
+      const diffColors = ['#4ade80', '#facc15', '#fb923c', '#f87171'];
 
-      const avgTimes = diffs.map(d => {
-        const s = stats.byDifficulty[d];
-        return s && s.avgTime ? Math.round(s.avgTime) : 0;
-      });
+      const completed = stats.recentGames.filter(g => g.completed);
 
-      this._charts.push(new Chart(document.getElementById('chartAvgTime').getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: ['Easy', 'Medium', 'Hard', 'Advanced'],
-          datasets: [{
-            label: 'Avg Time (s)',
-            data: avgTimes,
-            backgroundColor: diffColors,
-            borderRadius: 4,
-            borderSkipped: false,
-          }]
-        },
+      const colorWithAlpha = (hex, alpha) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+      };
+      const alphaForCount = n => [0.3, 0.5, 0.65, 0.8, 0.95][Math.min(n - 1, 4)];
+
+      const makeColumn = (games, xPos, baseColor, yAxisID, style = 'circle') => {
+        const freq = {};
+        games.forEach(g => {
+          const y = yAxisID === 'yTime' ? +(g.time / 60).toFixed(2) : (g.mistakes || 0);
+          freq[y] = (freq[y] || 0) + 1;
+        });
+        const pts = Object.entries(freq).map(([y, cnt]) => ({ x: xPos, y: +y, cnt }));
+        return {
+          data: pts.map(p => ({ x: p.x, y: p.y })),
+          backgroundColor: pts.map(p => colorWithAlpha(baseColor, alphaForCount(p.cnt))),
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointStyle: style,
+          pointBorderWidth: 0,
+          yAxisID,
+        };
+      };
+
+      // Time columns at x=i, mistakes columns at x=i+0.5
+      const timeDatasets = diffs.map((d, i) => ({
+        label: diffLabels[i],
+        ...makeColumn(completed.filter(g => g.difficulty === d), i, diffColors[i], 'yTime'),
+      }));
+
+      const mistakeDatasets = diffs.map((d, i) => ({
+        label: diffLabels[i] + '_m',
+        ...makeColumn(completed.filter(g => g.difficulty === d), i + 0.5, diffColors[i], 'yMistakes', 'crossRot'),
+      }));
+
+      this._charts.push(new Chart(document.getElementById('chartAnalysis').getContext('2d'), {
+        type: 'scatter',
+        data: { datasets: [...timeDatasets, ...mistakeDatasets] },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                filter: item => !item.text.endsWith('_m'),
+                color: textSec, font: { size: 12 }, padding: 10, boxWidth: 12,
+              },
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => {
+                  const isMistakes = ctx.dataset.yAxisID === 'yMistakes';
+                  const name = ctx.dataset.label.replace('_m', '');
+                  return isMistakes
+                    ? `${name}: ${ctx.parsed.y} mistakes`
+                    : `${name}: ${ctx.parsed.y.toFixed(1)} min`;
+                },
+              },
+            },
+          },
           scales: {
-            x: { grid: { display: false }, ticks: { color: textSec, font: { size: 12 } }, border: { color: borderDef } },
-            y: { grid: { color: borderDef }, ticks: { color: textSec, font: { size: 12 } }, border: { display: false } }
-          }
-        }
+            x: {
+              min: -0.5, max: 4.0,
+              afterBuildTicks(axis) {
+                axis.ticks = [0, 1, 2, 3].map(v => ({ value: v }));
+              },
+              ticks: {
+                color: textSec, font: { size: 11 },
+                callback: v => ['Easy', 'Med', 'Hard', 'Adv'][Math.round(v)] || '',
+              },
+              grid: { display: false },
+              border: { color: borderDef },
+            },
+            yTime: {
+              position: 'left',
+              title: { display: true, text: 'min', color: textSec, font: { size: 11 } },
+              ticks: { color: textSec, font: { size: 11 } },
+              grid: { color: borderDef },
+              border: { display: false },
+            },
+            yMistakes: {
+              position: 'right',
+              min: 0,
+              title: { display: true, text: 'mistakes', color: textSec, font: { size: 11 } },
+              ticks: { color: textSec, font: { size: 11 }, stepSize: 1 },
+              grid: { display: false },
+              border: { display: false },
+            },
+          },
+        },
       }));
 
+      // Doughnut: distribution by difficulty
       const played = diffs.map(d => stats.byDifficulty[d]?.played || 0);
       this._charts.push(new Chart(document.getElementById('chartDistribution').getContext('2d'), {
         type: 'doughnut',
         data: {
-          labels: ['Easy', 'Medium', 'Hard', 'Advanced'],
-          datasets: [{
-            data: played,
-            backgroundColor: diffColors,
-            borderWidth: 0,
-          }]
+          labels: diffLabels,
+          datasets: [{ data: played, backgroundColor: diffColors, borderWidth: 0 }],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           cutout: '60%',
-          plugins: { legend: { position: 'bottom', labels: { color: textSec, font: { size: 12 }, padding: 12 } } }
-        }
+          plugins: { legend: { position: 'bottom', labels: { color: textSec, font: { size: 12 }, padding: 12 } } },
+        },
       }));
 
-      const recent = stats.recentGames.filter(g => g.completed).slice(0, 20);
-      if (recent.length > 1) {
-        this._charts.push(new Chart(document.getElementById('chartTrend').getContext('2d'), {
-          type: 'line',
-          data: {
-            labels: recent.map((_, i) => `#${i + 1}`),
-            datasets: [{
-              label: 'Solve Time (s)',
-              data: recent.map(g => g.time),
-              borderColor: '#7F77DD',
-              backgroundColor: 'rgba(127,119,221,0.1)',
-              fill: true,
-              tension: 0.3,
-              pointRadius: 3,
-              pointBackgroundColor: '#7F77DD',
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { display: false }, ticks: { color: textSec, font: { size: 11 } }, border: { color: borderDef } },
-              y: { grid: { color: borderDef }, ticks: { color: textSec, font: { size: 11 } }, border: { display: false } }
-            }
-          }
-        }));
-      }
+      // Toggle handlers and initial daily chart
+      page.querySelector('.toggle-week').onclick = () => {
+        page.querySelector('.toggle-week').classList.add('active');
+        page.querySelector('.toggle-month').classList.remove('active');
+        this._renderDailyChart(stats, 'week');
+      };
+      page.querySelector('.toggle-month').onclick = () => {
+        page.querySelector('.toggle-month').classList.add('active');
+        page.querySelector('.toggle-week').classList.remove('active');
+        this._renderDailyChart(stats, 'month');
+      };
+      this._renderDailyChart(stats, 'week');
     };
 
     if (window.Chart) {
-      loadChart();
+      loadCharts();
     } else {
       const script = document.createElement('script');
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
-      script.onload = loadChart;
+      script.onload = loadCharts;
       document.head.appendChild(script);
     }
+  }
+
+  _renderDailyChart(stats, period) {
+    const container = this.dom.statsPage.querySelector('.chart-daily');
+    container.innerHTML = '<canvas id="chartDaily"></canvas>';
+
+    if (!window.Chart) return;
+
+    const style = getComputedStyle(document.documentElement);
+    const textSec = style.getPropertyValue('--text-secondary').trim() || '#888';
+    const borderDef = style.getPropertyValue('--border-thin').trim() || '#d0d0d0';
+
+    const days = period === 'week' ? 7 : 30;
+    const diffs = ['easy', 'medium', 'hard', 'advanced'];
+    const diffLabels = ['Easy', 'Medium', 'Hard', 'Advanced'];
+    const diffColors = ['#4ade80', '#facc15', '#fb923c', '#f87171'];
+
+    const dateKeys = [];
+    const labels = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      dateKeys.push(d.toISOString().slice(0, 10));
+      labels.push(d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
+    }
+
+    const dailyCounts = {};
+    for (const key of dateKeys) {
+      dailyCounts[key] = { easy: 0, medium: 0, hard: 0, advanced: 0 };
+    }
+    for (const game of (stats.allGames || [])) {
+      if (!game.completed) continue;
+      const key = new Date(game.date).toISOString().slice(0, 10);
+      if (dailyCounts[key]) dailyCounts[key][game.difficulty] = (dailyCounts[key][game.difficulty] || 0) + 1;
+    }
+
+    if (this._dailyChart) {
+      this._dailyChart.destroy();
+      this._dailyChart = null;
+    }
+
+    this._dailyChart = new Chart(document.getElementById('chartDaily').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: diffs.map((d, i) => ({
+          label: diffLabels[i],
+          data: dateKeys.map(k => dailyCounts[k][d] || 0),
+          backgroundColor: diffColors[i],
+          borderRadius: 3,
+          borderSkipped: false,
+        })),
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: textSec, font: { size: 12 }, padding: 10, boxWidth: 12 } },
+        },
+        scales: {
+          x: {
+            stacked: true,
+            grid: { display: false },
+            ticks: { color: textSec, font: { size: 10 }, maxRotation: 45, autoSkip: true, maxTicksLimit: period === 'week' ? 7 : 10 },
+            border: { color: borderDef },
+          },
+          y: {
+            stacked: true,
+            ticks: { color: textSec, font: { size: 11 }, stepSize: 1 },
+            grid: { color: borderDef },
+            border: { display: false },
+          },
+        },
+      },
+    });
   }
 
   _renderHistory(games) {

@@ -132,6 +132,7 @@ export class GameStorage {
       totalWins,
       totalTime,
       byDifficulty,
+      allGames: history,
       recentGames: history.slice(-20).reverse(),
       streaks: { current: currentStreak, best: bestStreak },
       averageMistakes: totalGames ? totalMistakes / totalGames : 0,
