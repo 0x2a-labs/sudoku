@@ -25,8 +25,8 @@
     <div class="header">
       <div class="header-left">
         <select class="difficulty-select" aria-label="Difficulty">
-          <option value="easy">Easy</option>
-          <option value="medium" selected>Medium</option>
+          <option value="easy" selected>Easy</option>
+          <option value="medium">Medium</option>
           <option value="hard">Hard</option>
           <option value="advanced">Advanced</option>
         </select>
@@ -34,7 +34,7 @@
       </div>
       <div class="header-right">
         <span class="timer" aria-label="Timer">0:00</span>
-        <span class="mistakes" aria-label="Mistakes">0/3</span>
+        <span class="mistakes" aria-label="Mistakes">0</span>
         <button class="menu-btn" aria-label="Statistics menu">
           <span></span><span></span><span></span>
         </button>
@@ -92,6 +92,10 @@
       <button class="tool-btn clear-btn" aria-label="Clear board">
         <span class="tool-icon"><svg viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></span>
         <span class="tool-label">Clear</span>
+      </button>
+      <button class="tool-btn overlay-btn active" aria-label="Toggle overlay">
+        <span class="tool-icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+        <span class="tool-label">Overlay</span>
       </button>
     </div>
 

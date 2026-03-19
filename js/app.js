@@ -16,12 +16,12 @@ class SudokuApp {
       board: null,
       notes: Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set())),
       selectedCell: null,
-      difficulty: 'medium',
+      difficulty: 'easy',
       elapsed: 0,
       timerInterval: null,
       mistakes: 0,
-      maxMistakes: 3,
       hintsUsed: 0,
+      overlayEnabled: true,
       history: [],
       notesMode: false,
       gameOver: false,
@@ -53,6 +53,7 @@ class SudokuApp {
       undoBtn: document.querySelector('.undo-btn'),
       notesBtn: document.querySelector('.notes-btn'),
       clearBtn: document.querySelector('.clear-btn'),
+      overlayBtn: document.querySelector('.overlay-btn'),
       hintPanel: document.querySelector('.hint-panel'),
       hintTechnique: document.querySelector('.hint-technique'),
       hintDescription: document.querySelector('.hint-description'),
@@ -93,6 +94,7 @@ class SudokuApp {
     this.dom.undoBtn.addEventListener('click', () => this.undo());
     this.dom.notesBtn.addEventListener('click', () => this.toggleNotes());
     this.dom.clearBtn.addEventListener('click', () => this.confirmClearBoard());
+    this.dom.overlayBtn.addEventListener('click', () => this.toggleOverlay());
     this.dom.hintClose.addEventListener('click', () => this.dismissHint());
     this.dom.hintApply.addEventListener('click', () => this.applyHint());
 
@@ -204,6 +206,7 @@ class SudokuApp {
 
     const oldVal = this.state.board[row][col];
     if (oldVal === num) return;
+    if (oldVal !== 0 && oldVal === this.state.solution[row][col]) return;
 
     this.state.history.push({ row, col, oldVal, newVal: num, type: 'value', oldNotes: [...this.state.notes[row][col]] });
     this.state.board[row][col] = num;
@@ -211,10 +214,6 @@ class SudokuApp {
 
     if (num !== this.state.solution[row][col]) {
       this.state.mistakes++;
-      if (this.state.mistakes >= this.state.maxMistakes) {
-        this._gameOver();
-        return;
-      }
     } else {
       this._removeNoteFromPeers(row, col, num);
     }
@@ -264,6 +263,7 @@ class SudokuApp {
     if (this.state.gameOver) return;
 
     const oldVal = this.state.board[row][col];
+    if (oldVal !== 0 && oldVal === this.state.solution[row][col]) return;
     const oldNotes = [...this.state.notes[row][col]];
     if (oldVal === 0 && oldNotes.length === 0) return;
 
@@ -328,6 +328,12 @@ class SudokuApp {
   toggleNotes() {
     this.state.notesMode = !this.state.notesMode;
     this.dom.notesBtn.classList.toggle('active', this.state.notesMode);
+    this.render();
+  }
+
+  toggleOverlay() {
+    this.state.overlayEnabled = !this.state.overlayEnabled;
+    this.dom.overlayBtn.classList.toggle('active', this.state.overlayEnabled);
     this.render();
   }
 
@@ -701,12 +707,14 @@ class SudokuApp {
           }
         }
 
-        const overlayNum = selVal || 0;
-        if (overlayNum > 0) {
-          if (val === overlayNum && !(r === selRow && c === selCol)) {
-            cell.classList.add('same-number');
-          } else if (val !== overlayNum && (val !== 0 || !this.solver.isValid(board, r, c, overlayNum))) {
-            cell.classList.add('cant-place');
+        if (this.state.overlayEnabled) {
+          const overlayNum = selVal || 0;
+          if (overlayNum > 0) {
+            if (val === overlayNum && !(r === selRow && c === selCol)) {
+              cell.classList.add('same-number');
+            } else if (val !== overlayNum && (val !== 0 || !this.solver.isValid(board, r, c, overlayNum))) {
+              cell.classList.add('cant-place');
+            }
           }
         }
 
@@ -765,9 +773,7 @@ class SudokuApp {
   }
 
   _renderMistakes() {
-    const { mistakes, maxMistakes } = this.state;
-    this.dom.mistakes.textContent = `${mistakes}/${maxMistakes}`;
-    this.dom.mistakes.classList.toggle('at-limit', mistakes >= maxMistakes);
+    this.dom.mistakes.textContent = `${this.state.mistakes}`;
   }
 }
 
