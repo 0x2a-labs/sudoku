@@ -463,9 +463,28 @@ class SudokuApp {
     this._showGameOverModal();
   }
 
+  _randomVictoryMessage() {
+    const messages = [
+      { title: 'Puzzle Complete! 🎉', subtitle: 'You crushed it!' },
+      { title: 'Brilliant! 🧠✨', subtitle: 'That was impressive!' },
+      { title: 'Nailed It! 🔥', subtitle: "You're on fire!" },
+      { title: 'Well Done! 🏆', subtitle: 'Champion-level solving!' },
+      { title: 'Amazing! 🌟', subtitle: 'Your brain is a machine!' },
+      { title: 'Victory! 💪', subtitle: 'Nothing can stop you!' },
+      { title: 'Perfection! 👏', subtitle: 'Sudoku master at work!' },
+      { title: 'You Did It! 🥳', subtitle: 'Time to celebrate!' },
+      { title: 'Genius Move! 🎯', subtitle: 'Every number in its place!' },
+      { title: 'Unstoppable! 🚀', subtitle: 'Ready for the next challenge?' },
+    ];
+    return messages[Math.floor(Math.random() * messages.length)];
+  }
+
   _showVictoryModal() {
     const overlay = this.dom.victoryOverlay;
+    const msg = this._randomVictoryMessage();
     overlay.style.display = 'flex';
+    overlay.querySelector('.victory-title').textContent = msg.title;
+    overlay.querySelector('.victory-subtitle').textContent = msg.subtitle;
     overlay.querySelector('.victory-time').textContent = this._formatTime(this.state.elapsed);
     overlay.querySelector('.victory-mistakes').textContent = this.state.mistakes;
     overlay.querySelector('.victory-hints').textContent = this.state.hintsUsed;
@@ -475,7 +494,7 @@ class SudokuApp {
       this.hideVictory();
       this.newGame(this.state.difficulty);
     };
-    overlay.querySelector('.victory-stats').onclick = () => {
+    overlay.querySelector('.victory-view-stats').onclick = () => {
       this.hideVictory();
       this.showStats();
     };
@@ -484,7 +503,7 @@ class SudokuApp {
   _showGameOverModal() {
     const overlay = this.dom.victoryOverlay;
     overlay.style.display = 'flex';
-    overlay.querySelector('.victory-title').textContent = 'Game Over';
+    overlay.querySelector('.victory-title').textContent = 'Game Over 😵';
     overlay.querySelector('.victory-title').style.color = 'var(--red)';
     overlay.querySelector('.victory-subtitle').textContent = 'Too many mistakes!';
     overlay.querySelector('.victory-time').textContent = this._formatTime(this.state.elapsed);
@@ -496,7 +515,7 @@ class SudokuApp {
       this.hideVictory();
       this.newGame(this.state.difficulty);
     };
-    overlay.querySelector('.victory-stats').onclick = () => {
+    overlay.querySelector('.victory-view-stats').onclick = () => {
       this.hideVictory();
       this.showStats();
     };
@@ -505,9 +524,7 @@ class SudokuApp {
   hideVictory() {
     this.dom.victoryOverlay.style.display = 'none';
     const titleEl = this.dom.victoryOverlay.querySelector('.victory-title');
-    titleEl.textContent = 'Puzzle Complete!';
     titleEl.style.color = '';
-    this.dom.victoryOverlay.querySelector('.victory-subtitle').textContent = 'Great job!';
   }
 
   // --- Stats ---
