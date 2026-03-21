@@ -535,6 +535,13 @@ class SudokuApp {
     this._renderStats(stats);
 
     page.querySelector('.stats-back-btn').onclick = () => this.hideStats();
+
+    page.querySelector('.export-data-btn').onclick = () => this._exportData();
+    page.querySelector('.import-data-btn').onclick = () => {
+      page.querySelector('.import-file-input').click();
+    };
+    page.querySelector('.import-file-input').onchange = (e) => this._importData(e);
+    page.querySelector('.refresh-app-btn').onclick = () => this._forceRefresh();
   }
 
   hideStats() {
@@ -808,6 +815,65 @@ class SudokuApp {
         <div class="history-date">${dateStr}</div>
       </div>`;
     }).join('');
+  }
+
+  // --- Data Management ---
+  _exportData() {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith('sudoku_')) {
+        data[key] = JSON.parse(localStorage.getItem(key));
+      }
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sudoku-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  _importData(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        for (const [key, value] of Object.entries(data)) {
+          if (key.startsWith('sudoku_')) {
+            localStorage.setItem(key, JSON.stringify(value));
+          }
+        }
+        this.hideStats();
+        const saved = this.storage.loadGame();
+        if (saved) {
+          this._restoreGame(saved);
+        }
+      } catch {
+        alert('Invalid backup file.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
+
+  _forceRefresh() {
+    if (!confirm('This will clear cached app files and reload. Your game data will be preserved.')) return;
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        const unregisterAll = registrations.map(r => r.unregister());
+        return Promise.all(unregisterAll);
+      }).then(() => caches.keys()).then(keys => {
+        return Promise.all(keys.map(k => caches.delete(k)));
+      }).then(() => {
+        location.reload(true);
+      });
+    } else {
+      location.reload(true);
+    }
   }
 
   // --- Save ---
