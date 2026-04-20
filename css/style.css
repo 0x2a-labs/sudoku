@@ -394,6 +394,12 @@ select {
   pointer-events: none;
 }
 
+.num-btn.locked {
+  border: 2.5px solid var(--border-thick);
+  background: var(--blue-light);
+  box-shadow: inset 0 0 0 1px var(--border-thick);
+}
+
 .num-btn .count {
   position: absolute;
   top: 3px;

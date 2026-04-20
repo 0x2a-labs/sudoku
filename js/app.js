@@ -7,6 +7,7 @@ class SudokuApp {
     this.solver = new SudokuSolver();
     this.storage = new GameStorage();
     this.state = this._emptyState();
+    this._lastNumTapInfo = null;
   }
 
   _emptyState() {
@@ -16,6 +17,7 @@ class SudokuApp {
       board: null,
       notes: Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set())),
       selectedCell: null,
+      lockedNumber: null,
       difficulty: 'easy',
       elapsed: 0,
       timerInterval: null,
@@ -92,7 +94,7 @@ class SudokuApp {
       const btn = e.target.closest('.num-btn');
       if (!btn) return;
       const num = parseInt(btn.dataset.num);
-      this.selectNumber(num);
+      this._handleNumpadTap(num);
     });
 
     this.dom.newGameBtn.addEventListener('click', () => {
@@ -104,11 +106,11 @@ class SudokuApp {
     });
 
     this.dom.menuBtn.addEventListener('click', () => this.showStats());
-    this.dom.hintBtn.addEventListener('click', () => this.getHint());
-    this.dom.undoBtn.addEventListener('click', () => this.undo());
-    this.dom.notesBtn.addEventListener('click', () => this.toggleNotes());
-    this.dom.clearBtn.addEventListener('click', () => this.confirmClearBoard());
-    this.dom.overlayBtn.addEventListener('click', () => this.toggleOverlay());
+    this.dom.hintBtn.addEventListener('click', () => { this._clearLock(); this.getHint(); });
+    this.dom.undoBtn.addEventListener('click', () => { this._clearLock(); this.undo(); });
+    this.dom.notesBtn.addEventListener('click', () => { this._clearLock(); this.toggleNotes(); });
+    this.dom.clearBtn.addEventListener('click', () => { this._clearLock(); this.confirmClearBoard(); });
+    this.dom.overlayBtn.addEventListener('click', () => { this._clearLock(); this.toggleOverlay(); });
     this.dom.hintClose.addEventListener('click', () => this.dismissHint());
     this.dom.hintApply.addEventListener('click', () => this.applyHint());
 
@@ -122,9 +124,11 @@ class SudokuApp {
     const key = e.key;
     if (key >= '1' && key <= '9') {
       e.preventDefault();
+      this._clearLock();
       this.selectNumber(parseInt(key));
     } else if (key === 'Backspace' || key === 'Delete') {
       e.preventDefault();
+      this._clearLock();
       this.selectNumber(0);
     } else if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight') {
       e.preventDefault();
@@ -152,6 +156,7 @@ class SudokuApp {
   newGame(difficulty) {
     this.stopTimer();
     this.state = this._emptyState();
+    this._lastNumTapInfo = null;
     this.state.difficulty = difficulty;
     this.dom.difficultySelect.value = difficulty;
 
@@ -189,6 +194,10 @@ class SudokuApp {
   selectCell(row, col) {
     if (this.state.gameOver) return;
     this.state.selectedCell = [row, col];
+    if (this.state.lockedNumber !== null) {
+      this._placeOrNote(row, col, this.state.lockedNumber);
+      this._checkAndReleaseLock();
+    }
     this.render();
   }
 
@@ -203,6 +212,70 @@ class SudokuApp {
       this._placeOrNote(r, c, num);
     }
     this.render();
+  }
+
+  _handleNumpadTap(num) {
+    if (this.state.gameOver) return;
+    const now = Date.now();
+
+    if (num === 0) {
+      this._clearLock();
+      this.selectNumber(0);
+      return;
+    }
+
+    // Double-tap detection: same number tapped within 300ms
+    if (this._lastNumTapInfo &&
+        this._lastNumTapInfo.num === num &&
+        now - this._lastNumTapInfo.time < 300) {
+      this._lastNumTapInfo = null;
+      if (this.state.lockedNumber === num) {
+        this._clearLock();
+      } else {
+        this._setLock(num);
+      }
+      return;
+    }
+
+    this._lastNumTapInfo = { num, time: now };
+
+    // Single tap while a different number is locked → release lock and use new number
+    if (this.state.lockedNumber !== null && this.state.lockedNumber !== num) {
+      this._clearLock();
+    }
+
+    // Single tap on the locked number → release lock
+    if (this.state.lockedNumber === num) {
+      this._clearLock();
+      return;
+    }
+
+    this.selectNumber(num);
+  }
+
+  _setLock(num) {
+    this.state.lockedNumber = num;
+    this.render();
+  }
+
+  _clearLock() {
+    if (this.state.lockedNumber === null) return;
+    this.state.lockedNumber = null;
+    this.render();
+  }
+
+  _checkAndReleaseLock() {
+    if (this.state.lockedNumber === null) return;
+    const num = this.state.lockedNumber;
+    let count = 0;
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (this.state.board[r][c] === num) count++;
+      }
+    }
+    if (count >= 9) {
+      this.state.lockedNumber = null;
+    }
   }
 
   _placeOrNote(row, col, num) {
@@ -936,7 +1009,7 @@ class SudokuApp {
         }
 
         if (this.state.overlayEnabled) {
-          const overlayNum = selVal || 0;
+          const overlayNum = this.state.lockedNumber || selVal || 0;
           if (overlayNum > 0) {
             if (val === overlayNum && !(r === selRow && c === selCol)) {
               cell.classList.add('same-number');
@@ -987,11 +1060,12 @@ class SudokuApp {
       const btn = btns[i];
       const num = parseInt(btn.dataset.num);
       if (num === 0) {
-        btn.classList.remove('active', 'completed');
+        btn.classList.remove('active', 'completed', 'locked');
         continue;
       }
       btn.classList.remove('active');
       btn.classList.toggle('completed', counts[num] >= 9);
+      btn.classList.toggle('locked', num === this.state.lockedNumber);
       const countEl = btn.querySelector('.count');
       if (countEl) {
         const remaining = 9 - counts[num];
