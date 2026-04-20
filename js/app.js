@@ -283,6 +283,7 @@ class SudokuApp {
   _setLock(num) {
     this.state.lockedNumber = num;
     this.state.activeNumber = num;
+    this.state.selectedCell = null;
     this.render();
   }
 
