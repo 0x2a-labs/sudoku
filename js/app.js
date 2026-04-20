@@ -547,7 +547,7 @@ class SudokuApp {
       mistakes: this.state.mistakes,
       hintsUsed: this.state.hintsUsed,
       date: new Date().toISOString(),
-      completed: true,
+      completed: this.state.mistakes === 0,
     });
     this._showVictoryModal();
   }
@@ -585,10 +585,17 @@ class SudokuApp {
 
   _showVictoryModal() {
     const overlay = this.dom.victoryOverlay;
-    const msg = this._randomVictoryMessage();
+    const titleEl = overlay.querySelector('.victory-title');
     overlay.style.display = 'flex';
-    overlay.querySelector('.victory-title').textContent = msg.title;
-    overlay.querySelector('.victory-subtitle').textContent = msg.subtitle;
+    if (this.state.mistakes > 0) {
+      titleEl.textContent = 'Puzzle Complete';
+      titleEl.style.color = 'var(--amber)';
+      overlay.querySelector('.victory-subtitle').textContent = `Solved with ${this.state.mistakes} mistake${this.state.mistakes > 1 ? 's' : ''}`;
+    } else {
+      const msg = this._randomVictoryMessage();
+      titleEl.textContent = msg.title;
+      overlay.querySelector('.victory-subtitle').textContent = msg.subtitle;
+    }
     overlay.querySelector('.victory-time').textContent = this._formatTime(this.state.elapsed);
     overlay.querySelector('.victory-mistakes').textContent = this.state.mistakes;
     overlay.querySelector('.victory-hints').textContent = this.state.hintsUsed;
