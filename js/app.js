@@ -90,7 +90,19 @@ class SudokuApp {
       this.selectCell(row, col);
     });
 
+    let _numpadTouchFired = false;
+    this.dom.numpad.addEventListener('touchend', e => {
+      const btn = e.target.closest('.num-btn');
+      if (!btn) return;
+      e.preventDefault(); // blocks double-tap zoom and the synthesized click
+      _numpadTouchFired = true;
+      setTimeout(() => { _numpadTouchFired = false; }, 500);
+      const num = parseInt(btn.dataset.num);
+      this._handleNumpadTap(num);
+    }, { passive: false });
+
     this.dom.numpad.addEventListener('click', e => {
+      if (_numpadTouchFired) return; // already handled by touchend
       const btn = e.target.closest('.num-btn');
       if (!btn) return;
       const num = parseInt(btn.dataset.num);
