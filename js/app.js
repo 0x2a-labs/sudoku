@@ -294,6 +294,7 @@ class SudokuApp {
     }
     if (count >= 9) {
       this.state.lockedNumber = null;
+      this.state.activeNumber = null;
     }
   }
 
