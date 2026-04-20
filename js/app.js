@@ -18,6 +18,7 @@ class SudokuApp {
       notes: Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set())),
       selectedCell: null,
       lockedNumber: null,
+      activeNumber: null,
       difficulty: 'easy',
       elapsed: 0,
       timerInterval: null,
@@ -250,6 +251,7 @@ class SudokuApp {
     }
 
     this._lastNumTapInfo = { num, time: now };
+    this.state.activeNumber = num; // set before any render so overlay is correct
 
     // Single tap while a different number is locked → release lock and use new number
     if (this.state.lockedNumber !== null && this.state.lockedNumber !== num) {
@@ -267,6 +269,7 @@ class SudokuApp {
 
   _setLock(num) {
     this.state.lockedNumber = num;
+    this.state.activeNumber = num;
     this.render();
   }
 
@@ -1021,7 +1024,7 @@ class SudokuApp {
         }
 
         if (this.state.overlayEnabled) {
-          const overlayNum = this.state.lockedNumber || selVal || 0;
+          const overlayNum = this.state.lockedNumber || this.state.activeNumber || selVal || 0;
           if (overlayNum > 0) {
             if (val === overlayNum && !(r === selRow && c === selCol)) {
               cell.classList.add('same-number');
