@@ -211,8 +211,17 @@ class SudokuApp {
     if (this.state.gameOver) return;
     this.state.selectedCell = [row, col];
     if (this.state.lockedNumber !== null) {
-      this._placeOrNote(row, col, this.state.lockedNumber);
-      this._checkAndReleaseLock();
+      const cellVal = this.state.board[row][col];
+      const isGiven = this.state.puzzle[row][col] !== 0;
+      const isCorrectlyFilled = cellVal !== 0 && cellVal === this.state.solution[row][col];
+      if (isGiven || isCorrectlyFilled) {
+        // Cell can't be filled — release lock so overlay shows this cell's number
+        this.state.lockedNumber = null;
+        this.state.activeNumber = null;
+      } else {
+        this._placeOrNote(row, col, this.state.lockedNumber);
+        this._checkAndReleaseLock();
+      }
     }
     this.render();
   }
