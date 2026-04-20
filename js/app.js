@@ -533,6 +533,18 @@ class SudokuApp {
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
+  _formatSummaryTime(seconds) {
+    const totalSeconds = Math.max(0, Math.round(seconds));
+    const hours = Math.floor(totalSeconds / 3600);
+
+    if (hours > 0) {
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+    }
+
+    return this._formatTime(totalSeconds);
+  }
+
   // --- Victory / Game Over ---
   _checkVictory() {
     for (let r = 0; r < 9; r++) {
@@ -553,7 +565,8 @@ class SudokuApp {
       mistakes: this.state.mistakes,
       hintsUsed: this.state.hintsUsed,
       date: new Date().toISOString(),
-      completed: this.state.mistakes === 0,
+      result: 'won',
+      completed: true,
     });
     this._showVictoryModal();
   }
@@ -568,6 +581,7 @@ class SudokuApp {
       mistakes: this.state.mistakes,
       hintsUsed: this.state.hintsUsed,
       date: new Date().toISOString(),
+      result: 'failed',
       completed: false,
     });
     this._showGameOverModal();
@@ -670,6 +684,8 @@ class SudokuApp {
 
     page.querySelector('.stat-total-games').textContent = stats.totalGames;
     page.querySelector('.stat-win-rate').textContent = stats.totalGames ? Math.round((stats.totalWins / stats.totalGames) * 100) + '%' : '—';
+    page.querySelector('.stat-avg-time').textContent = stats.totalGames ? this._formatSummaryTime(stats.averageTime) : '—';
+    page.querySelector('.stat-total-time').textContent = stats.totalGames ? this._formatSummaryTime(stats.totalTime) : '—';
     page.querySelector('.stat-best-streak').textContent = stats.streaks.best;
     page.querySelector('.stat-current-streak').textContent = stats.streaks.current;
 
@@ -701,7 +717,7 @@ class SudokuApp {
       const diffLabels = ['Easy', 'Medium', 'Hard', 'Advanced'];
       const diffColors = ['#4ade80', '#facc15', '#fb923c', '#f87171'];
 
-      const completed = stats.recentGames.filter(g => g.completed);
+      const completed = stats.allGames.filter(g => g.completed);
 
       const colorWithAlpha = (hex, alpha) => {
         const r = parseInt(hex.slice(1, 3), 16);
@@ -922,12 +938,15 @@ class SudokuApp {
     container.innerHTML = games.map(g => {
       const date = new Date(g.date);
       const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-      const result = g.completed ? '' : ' (gave up)';
+      const result = g.result === 'gave-up' ? ' <span class="history-status">(gave up)</span>' : g.result === 'failed' ? ' <span class="history-status">(game over)</span>' : '';
+      const mistakes = Number(g.mistakes) || 0;
+      const hintsUsed = Number(g.hintsUsed) || 0;
+      const mistakeClass = mistakes > 0 ? 'history-mistake-count has-mistakes' : 'history-mistake-count';
       return `<div class="history-item">
         <span class="difficulty-badge ${g.difficulty}">${g.difficulty}</span>
         <div class="history-details">
           <div class="history-time">${this._formatTime(g.time)}${result}</div>
-          <div class="history-mistakes">${g.mistakes} mistakes, ${g.hintsUsed} hints</div>
+          <div class="history-mistakes"><span class="${mistakeClass}">${mistakes}</span> mistakes, ${hintsUsed} hints</div>
         </div>
         <div class="history-date">${dateStr}</div>
       </div>`;
@@ -979,6 +998,7 @@ class SudokuApp {
 
   _forceRefresh() {
     if (!confirm('This will clear cached app files and reload. Your game data will be preserved.')) return;
+    this.storage.recalculateHistory();
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
         const unregisterAll = registrations.map(r => r.unregister());
@@ -986,10 +1006,10 @@ class SudokuApp {
       }).then(() => caches.keys()).then(keys => {
         return Promise.all(keys.map(k => caches.delete(k)));
       }).then(() => {
-        location.reload(true);
+        location.reload();
       });
     } else {
-      location.reload(true);
+      location.reload();
     }
   }
 

@@ -2,9 +2,46 @@ const CURRENT_KEY = 'sudoku_current';
 const HISTORY_KEY = 'sudoku_history';
 
 const DIFFICULTIES = ['easy', 'medium', 'hard', 'advanced'];
+const GAME_RESULTS = {
+  WON: 'won',
+  GAVE_UP: 'gave-up',
+  FAILED: 'failed',
+};
 
 function emptyDifficultyStats() {
-  return { played: 0, won: 0, bestTime: null, avgTime: 0, totalMistakes: 0, totalHints: 0, times: [], currentStreak: 0, bestStreak: 0 };
+  return { played: 0, won: 0, bestTime: null, avgTime: 0, totalTime: 0, totalMistakes: 0, totalHints: 0, times: [], currentStreak: 0, bestStreak: 0 };
+}
+
+function normalizeNumber(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
+}
+
+function normalizeHistoryEntry(game) {
+  if (!game || typeof game !== 'object') return null;
+
+  let result = game.result;
+  if (result !== GAME_RESULTS.WON && result !== GAME_RESULTS.GAVE_UP && result !== GAME_RESULTS.FAILED) {
+    if (game.completed === true) {
+      result = GAME_RESULTS.WON;
+    } else if (game.completed === false) {
+      // Legacy builds stored solved puzzles with mistakes as incomplete and never persisted actual give-ups.
+      result = GAME_RESULTS.WON;
+    } else {
+      result = GAME_RESULTS.GAVE_UP;
+    }
+  }
+
+  return {
+    ...game,
+    difficulty: DIFFICULTIES.includes(game.difficulty) ? game.difficulty : 'medium',
+    time: normalizeNumber(game.time),
+    mistakes: normalizeNumber(game.mistakes),
+    hintsUsed: normalizeNumber(game.hintsUsed),
+    date: typeof game.date === 'string' && game.date ? game.date : '1970-01-01T00:00:00.000Z',
+    result,
+    completed: result === GAME_RESULTS.WON,
+  };
 }
 
 function serializeNotes(notes) {
@@ -24,6 +61,14 @@ function deserializeNotes(notes) {
 }
 
 export class GameStorage {
+  _writeHistory(history) {
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    } catch {
+      // storage full or unavailable
+    }
+  }
+
   saveGame(gameData) {
     const serialized = {
       ...gameData,
@@ -58,23 +103,33 @@ export class GameStorage {
 
   recordComplete(result) {
     const history = this.getHistory();
-    history.push(result);
-    try {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-    } catch {
-      // storage full or unavailable
-    }
+    const normalized = normalizeHistoryEntry(result);
+    if (!normalized) return;
+    history.push(normalized);
+    this._writeHistory(history);
   }
 
-  getHistory() {
+  recalculateHistory() {
     try {
       const raw = localStorage.getItem(HISTORY_KEY);
       if (!raw) return [];
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
+      if (!Array.isArray(parsed)) return [];
+
+      const normalized = parsed.map(normalizeHistoryEntry).filter(Boolean);
+      const serialized = JSON.stringify(normalized);
+      if (serialized !== raw) {
+        this._writeHistory(normalized);
+      }
+
+      return normalized;
     } catch {
       return [];
     }
+  }
+
+  getHistory() {
+    return this.recalculateHistory();
   }
 
   getStats() {
@@ -96,13 +151,14 @@ export class GameStorage {
       const diff = byDifficulty[game.difficulty] ?? (byDifficulty[game.difficulty] = emptyDifficultyStats());
 
       diff.played++;
+      diff.totalTime += game.time;
       diff.totalMistakes += game.mistakes || 0;
       diff.totalHints += game.hintsUsed || 0;
       totalMistakes += game.mistakes || 0;
       totalHints += game.hintsUsed || 0;
       totalTime += game.time || 0;
 
-      if (game.completed) {
+      if (game.result === GAME_RESULTS.WON) {
         totalWins++;
         diff.won++;
         diff.times.push(game.time);
@@ -117,7 +173,7 @@ export class GameStorage {
 
     // Global streaks (across all difficulties, in order)
     for (const game of history) {
-      if (game.completed) {
+      if (game.result === GAME_RESULTS.WON) {
         currentStreak++;
         bestStreak = Math.max(bestStreak, currentStreak);
       } else {
@@ -131,6 +187,7 @@ export class GameStorage {
       totalGames,
       totalWins,
       totalTime,
+      averageTime: totalGames ? totalTime / totalGames : 0,
       byDifficulty,
       allGames: history,
       recentGames: history.slice(-20).reverse(),
