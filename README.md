@@ -10,7 +10,7 @@ A clean, modern Sudoku puzzle game that runs entirely in the browser. Built with
 - **Number overlay** — click any number on the board to see where it can and can't be placed
 - **Notes mode** — pencil marks for candidates
 - **Undo** — full undo history
-- **Statistics** — solve times, win rate, streaks, and charts (Chart.js) stored in localStorage
+- **Statistics** — solve times, mistake-free win rate, streaks, and charts (Chart.js) stored in localStorage
 - **PWA** — installable, works offline via service worker
 - **Responsive** — works on desktop and mobile
 - **Dark mode** — follows system preference
@@ -22,7 +22,8 @@ A clean, modern Sudoku puzzle game that runs entirely in the browser. Built with
 3. Use **Notes** mode to pencil in candidates
 4. Use **Hint** to learn a solving technique
 5. Use **Undo** to revert mistakes
-6. 3 mistakes allowed per game
+6. Mistakes are tracked, but they do not end the game
+7. Statistics count only mistake-free finishes as wins
 
 ## Running Locally
 

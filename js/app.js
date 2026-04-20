@@ -147,11 +147,14 @@ class SudokuApp {
       e.preventDefault();
       this._moveSelection(key);
     } else if (key === 'h' || key === 'H') {
+      this._clearLock();
       this.getHint();
     } else if (key === 'n' || key === 'N') {
+      this._clearLock();
       this.toggleNotes();
     } else if (key === 'z' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
+      this._clearLock();
       this.undo();
     }
   }
@@ -267,12 +270,11 @@ class SudokuApp {
 
     // Single tap while a different number is locked → release lock and use new number
     if (this.state.lockedNumber !== null && this.state.lockedNumber !== num) {
-      this._clearLock();
+      this._clearLock(true);
     }
 
     // Single tap on the locked number → release lock and clear active number
     if (this.state.lockedNumber === num) {
-      this.state.activeNumber = null;
       this._clearLock();
       return;
     }
@@ -287,9 +289,12 @@ class SudokuApp {
     this.render();
   }
 
-  _clearLock() {
-    if (this.state.lockedNumber === null) return;
+  _clearLock(preserveActiveNumber = false) {
+    if (this.state.lockedNumber === null && (preserveActiveNumber || this.state.activeNumber === null)) return;
     this.state.lockedNumber = null;
+    if (!preserveActiveNumber) {
+      this.state.activeNumber = null;
+    }
     this.render();
   }
 
