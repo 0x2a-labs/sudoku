@@ -1050,7 +1050,7 @@ class SudokuApp {
         }
 
         if (this.state.overlayEnabled) {
-          const overlayNum = this.state.lockedNumber || this.state.activeNumber || selVal || 0;
+          const overlayNum = this.state.lockedNumber || selVal || this.state.activeNumber || 0;
           if (overlayNum > 0) {
             if (val === overlayNum && !(r === selRow && c === selCol)) {
               cell.classList.add('same-number');
