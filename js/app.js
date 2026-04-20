@@ -559,13 +559,14 @@ class SudokuApp {
     this.state.gameOver = true;
     this.stopTimer();
     this.storage.clearGame();
+    const result = this.state.mistakes > 0 ? 'completed-with-mistakes' : 'won';
     this.storage.recordComplete({
       difficulty: this.state.difficulty,
       time: this.state.elapsed,
       mistakes: this.state.mistakes,
       hintsUsed: this.state.hintsUsed,
       date: new Date().toISOString(),
-      result: 'won',
+      result,
       completed: true,
     });
     this._showVictoryModal();

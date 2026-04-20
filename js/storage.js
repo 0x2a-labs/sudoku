@@ -4,6 +4,7 @@ const HISTORY_KEY = 'sudoku_history';
 const DIFFICULTIES = ['easy', 'medium', 'hard', 'advanced'];
 const GAME_RESULTS = {
   WON: 'won',
+  COMPLETED_WITH_MISTAKES: 'completed-with-mistakes',
   GAVE_UP: 'gave-up',
   FAILED: 'failed',
 };
@@ -20,13 +21,21 @@ function normalizeNumber(value) {
 function normalizeHistoryEntry(game) {
   if (!game || typeof game !== 'object') return null;
 
+  const mistakes = normalizeNumber(game.mistakes);
+  const time = normalizeNumber(game.time);
+  const hintsUsed = normalizeNumber(game.hintsUsed);
+
   let result = game.result;
-  if (result !== GAME_RESULTS.WON && result !== GAME_RESULTS.GAVE_UP && result !== GAME_RESULTS.FAILED) {
+  if (result === GAME_RESULTS.WON && mistakes > 0) {
+    result = GAME_RESULTS.COMPLETED_WITH_MISTAKES;
+  }
+
+  if (result !== GAME_RESULTS.WON && result !== GAME_RESULTS.COMPLETED_WITH_MISTAKES && result !== GAME_RESULTS.GAVE_UP && result !== GAME_RESULTS.FAILED) {
     if (game.completed === true) {
-      result = GAME_RESULTS.WON;
+      result = mistakes > 0 ? GAME_RESULTS.COMPLETED_WITH_MISTAKES : GAME_RESULTS.WON;
     } else if (game.completed === false) {
-      // Legacy builds stored solved puzzles with mistakes as incomplete and never persisted actual give-ups.
-      result = GAME_RESULTS.WON;
+      // Legacy builds stored solved puzzles with mistakes as incomplete.
+      result = mistakes > 0 ? GAME_RESULTS.COMPLETED_WITH_MISTAKES : GAME_RESULTS.FAILED;
     } else {
       result = GAME_RESULTS.GAVE_UP;
     }
@@ -35,12 +44,12 @@ function normalizeHistoryEntry(game) {
   return {
     ...game,
     difficulty: DIFFICULTIES.includes(game.difficulty) ? game.difficulty : 'medium',
-    time: normalizeNumber(game.time),
-    mistakes: normalizeNumber(game.mistakes),
-    hintsUsed: normalizeNumber(game.hintsUsed),
+    time,
+    mistakes,
+    hintsUsed,
     date: typeof game.date === 'string' && game.date ? game.date : '1970-01-01T00:00:00.000Z',
     result,
-    completed: result === GAME_RESULTS.WON,
+    completed: result === GAME_RESULTS.WON || result === GAME_RESULTS.COMPLETED_WITH_MISTAKES,
   };
 }
 
