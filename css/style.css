@@ -33,24 +33,24 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-primary: #222244;
-    --bg-secondary: #1a1a2e;
-    --bg-tertiary: #2a2a4a;
-    --text-primary: #e0e0e0;
-    --text-secondary: #a0a0b0;
+    --bg-primary: #1e1e2e;
+    --bg-secondary: #12121e;
+    --bg-tertiary: #262638;
+    --text-primary: #f0f0f0;
+    --text-secondary: #b0b0c8;
     --text-given: #ffffff;
-    --text-user: #85B7EB;
-    --border-thin: #444466;
-    --border-thick: #9999bb;
-    --blue-light: rgba(55, 138, 221, 0.15);
-    --red-light: rgba(226, 75, 74, 0.15);
-    --teal-light: rgba(29, 158, 117, 0.15);
-    --purple-light: rgba(127, 119, 221, 0.15);
-    --amber-light: rgba(186, 117, 23, 0.15);
-    --cell-highlight-same: rgba(55, 138, 221, 0.25);
-    --modal-backdrop: rgba(0, 0, 0, 0.7);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --text-user: #7ec8ff;
+    --border-thin: #3e3e5c;
+    --border-thick: #a0a0c4;
+    --blue-light: rgba(55, 138, 221, 0.28);
+    --red-light: rgba(226, 75, 74, 0.3);
+    --teal-light: rgba(29, 158, 117, 0.28);
+    --purple-light: rgba(127, 119, 221, 0.28);
+    --amber-light: rgba(186, 117, 23, 0.28);
+    --cell-highlight-same: rgba(55, 138, 221, 0.4);
+    --modal-backdrop: rgba(0, 0, 0, 0.75);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -392,6 +392,12 @@ select {
 .num-btn.completed {
   opacity: 0.3;
   pointer-events: none;
+}
+
+.num-btn.locked {
+  outline: 2.5px solid var(--border-thick);
+  outline-offset: -1px;
+  background: var(--blue-light);
 }
 
 .num-btn .count {
