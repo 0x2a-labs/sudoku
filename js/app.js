@@ -197,9 +197,12 @@ class SudokuApp {
     this.state.mistakes = saved.mistakes || 0;
     this.state.hintsUsed = saved.hintsUsed || 0;
     this.state.history = saved.history || [];
-    this.state.notesMode = false;
+    this.state.notesMode = saved.notesMode || false;
+    this.state.overlayEnabled = saved.overlayEnabled !== undefined ? saved.overlayEnabled : true;
     this.state.gameOver = false;
     this.dom.difficultySelect.value = this.state.difficulty;
+    this.dom.notesBtn.classList.toggle('active', this.state.notesMode);
+    this.dom.overlayBtn.classList.toggle('active', this.state.overlayEnabled);
     this.startTimer();
     this.render();
   }
@@ -258,8 +261,9 @@ class SudokuApp {
       this._clearLock();
     }
 
-    // Single tap on the locked number → release lock
+    // Single tap on the locked number → release lock and clear active number
     if (this.state.lockedNumber === num) {
+      this.state.activeNumber = null;
       this._clearLock();
       return;
     }
@@ -285,7 +289,7 @@ class SudokuApp {
     let count = 0;
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
-        if (this.state.board[r][c] === num) count++;
+        if (this.state.board[r][c] === num && this.state.solution[r][c] === num) count++;
       }
     }
     if (count >= 9) {
@@ -467,9 +471,11 @@ class SudokuApp {
     const hint = this.state.activeHint;
     if (!hint || !hint.cell) return;
 
-    this.state.board[hint.cell[0]][hint.cell[1]] = hint.value;
-    this.state.notes[hint.cell[0]][hint.cell[1]].clear();
-    this._removeNoteFromPeers(hint.cell[0], hint.cell[1], hint.value);
+    const [r, c] = hint.cell;
+    this.state.history.push({ row: r, col: c, oldVal: this.state.board[r][c], newVal: hint.value, type: 'value', oldNotes: [...this.state.notes[r][c]] });
+    this.state.board[r][c] = hint.value;
+    this.state.notes[r][c].clear();
+    this._removeNoteFromPeers(r, c, hint.value);
 
     this.dismissHint();
 
@@ -976,6 +982,8 @@ class SudokuApp {
       mistakes: this.state.mistakes,
       hintsUsed: this.state.hintsUsed,
       history: this.state.history,
+      notesMode: this.state.notesMode,
+      overlayEnabled: this.state.overlayEnabled,
     });
   }
 
@@ -988,7 +996,7 @@ class SudokuApp {
   }
 
   _renderBoard() {
-    const { board, puzzle, solution, selectedCell, selectedNumber, activeHint, notes } = this.state;
+    const { board, puzzle, solution, selectedCell, activeHint, notes } = this.state;
     const cells = this.dom.board.children;
 
     const selRow = selectedCell ? selectedCell[0] : -1;
